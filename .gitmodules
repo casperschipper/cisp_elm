@@ -1,0 +1,3 @@
+[submodule "osc-web"]
+	path = osc-web
+	url = https://github.com/automata/osc-web.git
