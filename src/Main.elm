@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Array
 import Browser
-import Html exposing (Html)
+import Html exposing (..)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Json.Decode as D
@@ -30,19 +30,20 @@ subscriptions _ =
 
 
 type Shred
-    = Shred { id : ShredID, name : String }
+    = Shred { id : ShredID, name : String, idx : Int }
 
 
-shredWith : Int -> String -> Shred
-shredWith id name =
-    Shred { id = ShredID id, name = name }
+shredWith : Int -> String -> Int -> Shred
+shredWith id name idx =
+    Shred { id = ShredID id, name = name, idx = idx }
 
 
 shredDecoder : D.Decoder Shred
 shredDecoder =
-    D.map2 shredWith
+    D.map3 shredWith
         (D.field "id" D.int)
         (D.field "name" D.string)
+        (D.field "idx" D.int)
 
 
 stateDecoder : D.Decoder Cisp
@@ -82,7 +83,7 @@ type Msg
     = NoOp
     | CispStatus D.Value
     | ListShreds
-    | KillShred ShredID
+    | KillShred Int
 
 
 type alias Address =
@@ -167,24 +168,32 @@ viewLines : List String -> Html Msg
 viewLines lines =
     let
         spans =
-            List.map (\txt -> Html.span [] [ Html.text txt ]) lines
+            List.map (\txt -> span [] [ text txt ]) lines
     in
-    Html.div [] (List.intersperse (Html.br [] []) spans)
+    div [] (List.intersperse (br [] []) spans)
 
 
 viewShred : Shred -> Html Msg
 viewShred (Shred data) =
-    viewLines [ data.id |> asString, data.name ]
+    div []
+        [ viewLines [ data.id |> asString, data.name ]
+        , stopShredButton (Shred data)
+        ]
+
+
+stopShredButton : Shred -> Html Msg
+stopShredButton (Shred data) =
+    button [ Events.onClick (KillShred data.idx) ] [ text "X" ]
 
 
 viewCisp : Result Problem Cisp -> Html Msg
 viewCisp cisp =
     case cisp of
         Ok (Cisp shreds) ->
-            Html.ol [] (List.map viewShred shreds)
+            ol [] (List.map viewShred shreds)
 
         Err p ->
-            Html.p [] [ Html.text (problemTostring p) ]
+            Html.p [] [ text (problemTostring p) ]
 
 
 osc : D.Decoder OSC
@@ -232,24 +241,24 @@ update msg model =
         ListShreds ->
             ( model, toCisp "/cisp/ls" )
 
-        KillShred id ->
-            ( model, killShred id )
+        KillShred i ->
+            ( model, killShred i )
 
 
-killShred : ShredID -> Cmd msg
-killShred id =
-    toCisp ("/cisp/kill " ++ asString id)
+killShred : Int -> Cmd msg
+killShred idx =
+    toCisp ("/cisp/stopindex " ++ String.fromInt idx)
 
 
-lsButton : Html.Html Msg
+lsButton : Html Msg
 lsButton =
-    Html.button [ Events.onClick ListShreds ] [ Html.text "List CISP shreds" ]
+    button [ Events.onClick ListShreds ] [ text "List CISP shreds" ]
 
 
-view : Model -> Html.Html Msg
+view : Model -> Html Msg
 view model =
-    Html.div []
-        [ Html.p [] [ Html.text "ELM >> 3334 >> CISP >>> 3333 >>> ELM" ]
+    div []
+        [ p [] [ text "ELM >> 3334 >> CISP >>> 3333 >>> ELM" ]
         , lsButton
         , viewCisp model.status
         ]

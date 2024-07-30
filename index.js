@@ -24,8 +24,9 @@ socket.on('connect', function () {
 });
 
 app.ports.toCisp.subscribe(function (message) {
-    console.log('elm calling:', message);
-    socket.send('/cisp/ls');
+    console.log('elm calling, content of osc message =', message);
+    console.log("socket.emit('message',message);");
+    socket.emit('message', message);
 });
 
 socket.on('message', function (obj) {

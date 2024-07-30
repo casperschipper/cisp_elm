@@ -22,7 +22,7 @@ HTTP_SERVER_PID=$!
 
 # Save the PIDs to a file for reference
 echo $NODE_PID > /tmp/node_bridge.pid
-echo $PYTHON_HTTP_SERVER > /tmp/http_server.pid
+echo $HTTP_SERVER_PID > /tmp/http_server.pid
 
 echo "Processes started. NODE_PID: $NODE_PID, HTTP_SERVER_PID: $PYTHON_HTTP_SERVER"
 
